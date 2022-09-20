@@ -1,0 +1,93 @@
+== Level 1
+text
+
+=== Level 2
+text
+
+==== Level 4
+text
+
+TIP: tip
+
+IMPORTANT: important
+
+WARNING: warning
+
+CAUTION: caution
+
+.Optional title
+----
+*Listing* block
+code
+----
+
+.Optional title 2 - Python
+[source,python]
+----
+# print 0 to 4
+for i in range(5):
+    print(i)
+----
+
+.Optional title 3
+****
+*Sidebar* block
+Use: sidebar notes
+****
+
+
+*bold*
+
+**bo**ld one character (unconstrained)
+
+_italic_
+
+__ita__lic unconstrained
+
+`monospace`
+
+`+http://localhost:8080+`
+`+/issue/{id}+`
+
+https://asciidoctor.org[Asciidoctor] link with label
+
+image:logo.png[Logo]
+
+____
+Quoted text.
+
+Another paragraph in quote.
+____
+
+ $ gem install asciidoctor
+
+[source,java]
+----
+public class Person {
+  private String name;
+  public Person(String name) {
+    this.name = name;
+  }
+}
+----
+
+unordered list
+* apples
+* oranges
+** temple
+** navel
+* bananas
+
+ordered list
+
+. first
+.. second
+... third
+. first
+
+include::include_recursion.adoc[]
+
+include::very_short.adoc[]
+
+include::dir_include/very_short2.adoc[]
+
