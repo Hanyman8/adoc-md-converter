@@ -73,6 +73,74 @@ class AdocMdConverter:
                 self.markdown += i*4 * " " + str(self.number_in_line[i]+1) + "." + remove_prefix(line, (i+1)*character) + "\n"
                 self.number_in_line[i] += 1
 
-    def parse_text(self, line):
+    def parse_links(self, line):
+        # todo link with label and relative links
         pass
 
+    def parse_cross_reference(self):
+        pass
+
+    def parse_image(self, line):
+        pass
+
+    def parse_block_quote(self, line):
+        pass
+
+    def parse_literal_block(self, line):
+        """
+        In asciidoc indented by one or more spaces
+        or Delimited as:
+        ....
+        somthing
+        ....
+
+        :param line:
+        :return:
+        """
+        pass
+
+    def parse_code_block(self, line):
+        """
+        In adoc represented as:
+        [source,java]
+        ----
+        code
+        ----
+
+        In Md represented as:
+        ```java
+        code
+        ```
+
+        :param line:
+        :return:
+        """
+
+    def parse_thematic_break(self, line):
+        pass
+
+    def parse_diagrams_kroki(self, line):
+        """
+        Adoc:
+        [plantuml]
+        ....
+        Bob->Alice : hello
+        Alice -> Bob : hi
+        ....
+
+        Md:
+        ```plantuml
+        Bob -> Alice : hello
+        Alice -> Bob : hi
+        ```
+
+        :param line:
+        :return:
+        """
+        pass
+
+    def parse_uri_reference(self, line):
+        pass
+
+    def parse_text(self, line):
+        pass
