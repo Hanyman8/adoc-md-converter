@@ -7,6 +7,13 @@ def remove_prefix(text, prefix):
     return text
 
 
+def is_blockquote(line):
+    for char in ["=", "*"]:
+        if line.count(char) == 4 and len(line.lstrip(char)) == 0:
+            return True
+    return False
+
+
 class AdocMdConverter:
     def __init__(self, adoc):
         self.adoc = adoc
@@ -15,28 +22,27 @@ class AdocMdConverter:
         self.clear_numbered_list()
         self.ordered_list_line = False
 
+        self.is_code_block = False
+        self.is_code_block_open = False
+
+        self.is_blockquote = False
+        self.number_of_blockquote_indent = 0
+        self.set_of_used_indents = set()
+        self.is_code_in_block_quote = False
+
     def clear_numbered_list(self):
         self.number_in_line = {i: 0 for i in range(MAX_NUMBER_OF_NESTING)}
 
     def convert(self):
         for line in self.adoc.adoc.split('\n'):
-            if line.startswith("="):
-                # block
-                if line.count("=") > 4:
-                    print("BLOCK")  # TODO
 
-                # document header
-                elif line.count("=") == 1:
-                    print("DOCUMENT HEADER")  # TODO
+            if is_blockquote(line) or self.is_blockquote:  # todo more type of blocks
+                self.parse_blockquote(line)
 
-                # heading
-                else:
-                    self.parse_headings(line)
+            elif line.startswith("="):
+                self.parse_headings(line)
 
             elif line.startswith("****") and len(line) < 5:  # side block todo
-                pass
-
-            elif line.startswith("----"):  # listing block todo
                 pass
 
             elif line.lstrip().startswith("*"):
@@ -51,6 +57,14 @@ class AdocMdConverter:
                     self.ordered_list_line = True
                     self.parse_ordered_list(line, ".")
 
+            # code block parsing
+            elif line.startswith("[source") or self.is_code_block:
+                if self.parse_code_block(line):
+                    continue
+
+            elif line.startswith("----"):  # listing block todo
+                pass
+
             else:
                 self.parse_text(line)
 
@@ -64,13 +78,14 @@ class AdocMdConverter:
 
     def parse_list(self, line: str, character: str):
         for i in range(MAX_NUMBER_OF_NESTING):
-            if line.startswith((i+1)*character + " "):
-                self.markdown += i*4 * " " + character + remove_prefix(line, (i+1)*character) + "\n"
+            if line.startswith((i + 1) * character + " "):
+                self.markdown += i * 4 * " " + character + remove_prefix(line, (i + 1) * character) + "\n"
 
     def parse_ordered_list(self, line: str, character: str):
         for i in range(MAX_NUMBER_OF_NESTING):
-            if line.startswith((i+1)*character + " "):
-                self.markdown += i*4 * " " + str(self.number_in_line[i]+1) + "." + remove_prefix(line, (i+1)*character) + "\n"
+            if line.startswith((i + 1) * character + " "):
+                self.markdown += i * 4 * " " + str(self.number_in_line[i] + 1) + "." + remove_prefix(line, (
+                        i + 1) * character) + "\n"
                 self.number_in_line[i] += 1
 
     def parse_links(self, line):
@@ -80,10 +95,41 @@ class AdocMdConverter:
     def parse_cross_reference(self):
         pass
 
-    def parse_image(self, line):
+    def parse_image(self, line):  # could be in text
         pass
 
-    def parse_block_quote(self, line):
+    def parse_blockquote(self, line):  # todo resolve comments in blockquote
+        print("blockquote")
+        if line.startswith("====") or line.startswith("****"):
+            if line[0] not in self.set_of_used_indents:
+                self.is_blockquote = True
+                print(f"Adding {line[0]}")
+                self.number_of_blockquote_indent += 1
+                self.set_of_used_indents.add(line[0])
+            else:
+                print(f"Removing {line[0]}")
+                self.set_of_used_indents.remove(line[0])
+                self.number_of_blockquote_indent -= 1
+                self.markdown += ">" * self.number_of_blockquote_indent + "\n"
+        elif (line.startswith("....") or line.startswith("----")) and not self.is_code_in_block_quote:
+            self.markdown += ">" * self.number_of_blockquote_indent + "\n"
+            self.is_code_in_block_quote = True
+        elif (line.startswith("....") or line.startswith("----")) and self.is_code_in_block_quote:
+            self.is_code_in_block_quote = False
+            self.markdown += ">" * self.number_of_blockquote_indent + "\n"
+        elif self.is_code_in_block_quote:
+            self.markdown += ">" * self.number_of_blockquote_indent + 5 * " " + line + "\n"
+        else:
+            self.markdown += ">" * self.number_of_blockquote_indent + " " + line + "\n"
+
+        if self.number_of_blockquote_indent == 0:
+            self.is_blockquote = False
+            self.markdown += "\n"
+
+    def parse_literal_monospace(self, line):  # todo in text
+        pass
+
+    def parse_table(self, line):
         pass
 
     def parse_literal_block(self, line):
@@ -115,6 +161,19 @@ class AdocMdConverter:
         :param line:
         :return:
         """
+        self.is_code_block = True
+        if line.startswith("----") and not self.is_code_block_open:
+            self.is_code_block_open = True
+            return True
+        elif line.startswith("----") and self.is_code_block_open:
+            self.is_code_block_open = False
+            self.is_code_block = False
+            self.markdown += "```\n"
+            return True
+        if line.startswith("[source"):
+            self.markdown += "```" + remove_prefix(line, "[source,", ).rstrip("]") + "\n"
+        else:
+            self.markdown += line + "\n"
 
     def parse_thematic_break(self, line):
         pass
